@@ -1,0 +1,12 @@
+<h2>{{ isLogin ? 'Iniciar sesión' : 'Registrarse' }}</h2>
+
+<form (ngSubmit)="submit()">
+  <input [(ngModel)]="username" name="username" placeholder="Nombre de usuario" required /><br /><br />
+  <input *ngIf="!isLogin" [(ngModel)]="email" name="email" placeholder="Correo" required /><br /><br />
+  <button type="submit">{{ isLogin ? 'Entrar' : 'Registrar' }}</button>
+</form>
+
+<p>{{ message }}</p>
+<button (click)="isLogin = !isLogin">
+  Cambiar a {{ isLogin ? 'Registro' : 'Login' }}
+</button>

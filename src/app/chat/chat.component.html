@@ -1,0 +1,26 @@
+<div class="chat-container">
+  <div class="sidebar">
+    <h3>Usuarios</h3>
+    <ul>
+      <li *ngFor="let user of users" (click)="selectUser(user)" [class.active]="user.username === selectedUser?.username">
+        {{ user.username }}
+      </li>
+    </ul>
+  </div>
+
+  <div class="chat-window" *ngIf="selectedUser">
+    <h3>Conversación con {{ selectedUser.username }}</h3>
+    <div class="messages" #messageContainer>
+      <div *ngFor="let msg of messages">
+        <p *ngIf="msg.content && msg.content.trim()" [class.own]="msg.sender === currentUser">
+          <strong>{{ msg.sender }}:</strong> {{ msg.content }}
+        </p>
+      </div>
+    </div>
+
+    <form (submit)="sendMessage()" class="chat-form">
+      <input [(ngModel)]="newMessage" name="message" placeholder="Escribe tu mensaje" required />
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+</div>
