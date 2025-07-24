@@ -1,26 +1,89 @@
 <div class="chat-container">
+  <!-- Sidebar con lista de usuarios -->
   <div class="sidebar">
-    <h3>Usuarios</h3>
+    <div class="sidebar-header">
+      <h3>Chats</h3>
+      <input type="text" placeholder="Search Here..." />
+    </div>
     <ul>
-      <li *ngFor="let user of users" (click)="selectUser(user)" [class.active]="user.username === selectedUser?.username">
-        {{ user.username }}
+      <li *ngFor="let user of users"
+          (click)="selectUser(user)"
+          [class.active]="user.username === selectedUser?.username">
+        <img [src]="user.photoUrl || defaultAvatar" alt="avatar" class="avatar" />
+        <div class="user-info">
+          <strong>{{ user.username }}</strong>
+          <div class="status-wrapper">
+            <span class="status-dot" [ngClass]="user.online ? 'online' : 'offline'"></span>
+            <small>{{ user.online ? 'En línea' : 'Desconectado' }}</small>
+          </div>
+        </div>
       </li>
     </ul>
+    <button class="logout-button" (click)="logout()">Cerrar Sesión</button>
   </div>
 
+  <!-- Ventana de chat -->
   <div class="chat-window" *ngIf="selectedUser">
-    <h3>Conversación con {{ selectedUser.username }}</h3>
-    <div class="messages" #messageContainer>
-      <div *ngFor="let msg of messages">
-        <p *ngIf="msg.content && msg.content.trim()" [class.own]="msg.sender === currentUser">
-          <strong>{{ msg.sender }}:</strong> {{ msg.content }}
-        </p>
+    <div class="chat-header">
+      <div class="avatar-status-wrapper">
+        <img [src]="selectedUser.photoUrl || defaultAvatar" alt="avatar" class="avatar-lg" />
+        <span class="status-dot" [ngClass]="selectedUser.online ? 'online' : 'offline'"></span>
+      </div>
+      <div class="user-item">
+        <span>{{ selectedUser.username }}</span>
+      </div>
+      <div class="chat-actions">
+        <button title="Chat">💬</button>
+        <button title="Video">📹</button>
       </div>
     </div>
 
-    <form (submit)="sendMessage()" class="chat-form">
+    <div class="messages" #messageContainer>
+      <div *ngFor="let msg of messages" class="message-item" [ngClass]="msg.sender === currentUser ? 'own' : 'other'">
+        <div class="message-bubble">
+          <ng-container *ngIf="msg.sender !== currentUser">
+            <strong>{{ msg.sender }}</strong><br />
+          </ng-container>
+          <span *ngIf="msg.content">{{ msg.content }}</span>
+
+          <!-- Si el mensaje tiene archivo -->
+          <div *ngIf="msg.fileUrl" class="file-preview">
+            <ng-container [ngSwitch]="getFileType(msg.fileName)">
+              <div *ngSwitchCase="'image'" class="media">
+                <img [src]="msg.safeFileUrl" class="image-preview" />
+                <a [href]="sanitizeUrl(msg.fileUrl)" download target="_blank" class="download-btn">⬇️ Descargar imagen</a>
+              </div>
+              <div *ngSwitchCase="'video'" class="media">
+                <video [src]="msg.safeFileUrl" controls class="video-preview"></video>
+                <a [href]="sanitizeUrl(msg.fileUrl)" download target="_blank" class="download-btn">⬇️ Descargar video</a>
+              </div>
+              <div *ngSwitchCase="'audio'" class="media">
+                <audio [src]="msg.safeFileUrl" controls class="audio-preview"></audio>
+                <a [href]="sanitizeUrl(msg.fileUrl)" download target="_blank" class="download-btn">⬇️ Descargar audio</a>
+              </div>
+              <div *ngSwitchCase="'pdf'" class="media">
+                <iframe [src]="msg.safeFileUrl" class="pdf-preview"></iframe>
+                <a [href]="sanitizeUrl(msg.fileUrl)" target="_blank" class="download-btn">📄 Ver o Descargar PDF</a>
+              </div>
+              <div *ngSwitchDefault class="media">
+                <p>📎 <strong>{{ msg.fileName }}</strong></p>
+                <a [href]="sanitizeUrl(msg.fileUrl)" download target="_blank" class="download-btn">⬇️ Descargar</a>
+              </div>
+            </ng-container>
+          </div>
+
+          <div class="timestamp">{{ msg.timestamp | date: 'shortTime' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input fuera del form -->
+    <input id="fileInput" type="file" (change)="uploadFile($event)" hidden />
+
+    <form (ngSubmit)="sendMessage()" class="chat-form">
+      <label for="fileInput" class="upload-icon">📎</label>
       <input [(ngModel)]="newMessage" name="message" placeholder="Escribe tu mensaje" required />
-      <button type="submit">Enviar</button>
+      <button type="submit">➤</button>
     </form>
   </div>
 </div>

@@ -3,11 +3,15 @@ import { AuthService, User } from '../service/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+import { Inject, PLATFORM_ID } from '@angular/core';
+
 
 @Component({
   selector: 'app-login',
   standalone: true,
   templateUrl: './login.component.html',
+  styleUrl: './login.component.css',
   imports: [CommonModule, FormsModule]
 })
 export class LoginComponent {
@@ -16,11 +20,18 @@ export class LoginComponent {
   message = '';
   isLogin = true;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit() {
-    if (localStorage.getItem('username')) {
-      this.router.navigate(['/chat']);
+    if (isPlatformBrowser(this.platformId)) {
+      const savedUsername = localStorage.getItem('username');
+      if (savedUsername) {
+        this.router.navigate(['/chat']);
+      }
     }
   }
 
@@ -31,7 +42,9 @@ export class LoginComponent {
     if (this.isLogin) {
       this.authService.login(user).subscribe({
         next: (res) => {
-          localStorage.setItem('username', res.username);  // ✅ Guardamos el usuario
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem('username', res.username);
+          }
           this.message = '¡Bienvenido ' + res.username + '!';
           this.router.navigate(['/chat']);
         },
@@ -43,7 +56,7 @@ export class LoginComponent {
       this.authService.register(user).subscribe({
         next: (res) => {
           this.message = 'Usuario registrado: ' + res.username;
-          this.isLogin = true;  // ✅ Cambiar a modo login después de registrar
+          this.isLogin = true;
         },
         error: () => {
           this.message = 'Usuario ya registrado';
